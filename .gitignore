@@ -1,3 +1,9 @@
+*.out
+filter-data
+blimp
+glue_files
+models
+
 # Distribution / Packaging
 .Python
 build/

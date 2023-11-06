@@ -34,7 +34,10 @@ fi
 
 mkdir -p $MODEL_PATH/finetune/$OUT_DIR/
 
-python finetune_classification.py \
+srun singularity exec --nv \
+--overlay /scratch/myh2014/singularity/50G.ext3:ro \
+/scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
+"source /ext3/env.sh; conda activate babylm; python finetune_classification.py \
   --model_name_or_path $MODEL_PATH \
   --output_dir $MODEL_PATH/finetune/$OUT_DIR/ \
   --train_file glue_files/$SUBTASK_NAME.train.json \
@@ -53,7 +56,7 @@ python finetune_classification.py \
   --eval_steps $EVAL_EVERY \
   --save_steps $EVAL_EVERY \
   --overwrite_output_dir \
-  --seed $SEED
+  --seed $SEED"
 
 
 #   --train_file filter-data/${TASK_NAME}_filtered/$SUBTASK_NAME.train.json \
