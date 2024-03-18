@@ -3,6 +3,7 @@ filter-data
 blimp
 glue_files
 models
+results
 
 # Distribution / Packaging
 .Python

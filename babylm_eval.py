@@ -2,7 +2,7 @@ import argparse
 import lm_eval
 import os
 import json
-
+from lm_eval.models.ltgbert import LtgBertForMaskedLM
 
 TASKS = {
     # "blimp": ["anaphor_agreement.json", "argument_structure.json", "binding.json",
@@ -122,6 +122,7 @@ if __name__ == "__main__":
             "encoder only",
             "encoder",
             "encoder-decoder",
+            "ltgbert",
         ],
         help="Language model architecture.",
     )
@@ -153,6 +154,7 @@ if __name__ == "__main__":
         help="Number of few-shot examples to show the model for each test example.",
     )
     args = parser.parse_args()
+    print(args)
 
     MODEL_TYPE_REMAP = {
         "decoder only": "hf-causal",
@@ -160,6 +162,7 @@ if __name__ == "__main__":
         "encoder only": "hf-mlm",
         "encoder": "hf-mlm",
         "encoder-decoder": "hf-seq2seq",
+        "ltgbert": "ltgbert",
     }
     eval_model = lm_eval.get_model(
         MODEL_TYPE_REMAP[args.model_type],
