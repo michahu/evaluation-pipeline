@@ -48,4 +48,10 @@
 # Mar 18
 # ltgbert evals
 
+# sbatch babylm_eval.slurm models/ltgbert ltgbert
+# sbatch babylm_eval.slurm models/ltgbert_100M ltgbert
+# sbatch babylm_eval.slurm models/ltgbert_10M_fsdp ltgbert
+
+# Mar 27
+# running on filtered tasks
 sbatch babylm_eval.slurm models/ltgbert ltgbert

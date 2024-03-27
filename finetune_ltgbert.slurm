@@ -20,7 +20,6 @@ BSZ=${6:-64}            # default: 64
 EVAL_EVERY=${7:-200}    # default: 200
 MAX_EPOCHS=${8:-3}     # default: 10
 SEED=${9:-12}           # default: 12
-TOKENIZER=$10 # default: gpt2
 
 if [[ "$SUBTASK_NAME" = "mnli" ]]; then
     VALID_NAME="validation_matched"
@@ -43,8 +42,8 @@ srun singularity exec --nv \
 /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
 "source /ext3/env.sh; conda activate babylm; python finetune_classification.py \
   --model_name_or_path $MODEL_PATH \
-  --tokenizer_name $TOKENIZER \
   --output_dir $MODEL_PATH/finetune/$OUT_DIR/ \
+  --is_ltgbert True \
   --train_file glue_files/$SUBTASK_NAME.train.json \
   --validation_file glue_files/$SUBTASK_NAME.$VALID_NAME.json \
   --do_train \

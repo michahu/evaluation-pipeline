@@ -216,6 +216,12 @@ class ModelArguments:
             "help": "Path to pretrained model or model identifier from huggingface.co/models"
         }
     )
+    is_ltgbert: str = field(
+        default=False,
+        metadata={
+            "help": "Whether the model is a ltgbert or not."
+        }
+    )
     freeze_model: bool = field(
         default=False,
         metadata={"help": "Whether to freeze the parameters of the base model."},
@@ -453,16 +459,20 @@ def main():
     #
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-    config = AutoConfig.from_pretrained(
-        model_args.config_name
-        if model_args.config_name
-        else model_args.model_name_or_path,
-        num_labels=num_labels,
-        finetuning_task=data_args.task_name,
-        cache_dir=model_args.cache_dir,
-        revision=model_args.model_revision,
-        use_auth_token=True if model_args.use_auth_token else None,
-    )
+    if model_args.is_ltgbert:
+        from lm_eval.models.ltgbert import LtgBertSmallConfig
+        config = LtgBertSmallConfig()
+    else:
+        config = AutoConfig.from_pretrained(
+            model_args.config_name
+            if model_args.config_name
+            else model_args.model_name_or_path,
+            num_labels=num_labels,
+            finetuning_task=data_args.task_name,
+            cache_dir=model_args.cache_dir,
+            revision=model_args.model_revision,
+            use_auth_token=True if model_args.use_auth_token else None,
+        )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name
         if model_args.tokenizer_name
@@ -476,8 +486,10 @@ def main():
     if model_args.tokenizer_name == "gpt2":
         tokenizer.pad_token = tokenizer.eos_token
 
-    try:
-        model = AutoModelForSequenceClassification.from_pretrained(
+    if model_args.is_ltgbert:
+        tokenizer.pad_token = "<pad>"
+        from lm_eval.models.ltgbert import LtgBertForSequenceClassification
+        model = LtgBertForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,
@@ -486,14 +498,9 @@ def main():
             use_auth_token=True if model_args.use_auth_token else None,
             ignore_mismatched_sizes=model_args.ignore_mismatched_sizes,
         )
-        model.config.pad_token_id = model.config.eos_token_id
-    except ValueError as e:
-        from transformers import T5Config
-
-        if isinstance(config, T5Config):
-            from transformers_modified.t5 import T5ForSequenceClassification
-
-            model = T5ForSequenceClassification.from_pretrained(
+    else:
+        try:
+            model = AutoModelForSequenceClassification.from_pretrained(
                 model_args.model_name_or_path,
                 from_tf=bool(".ckpt" in model_args.model_name_or_path),
                 config=config,
@@ -502,8 +509,24 @@ def main():
                 use_auth_token=True if model_args.use_auth_token else None,
                 ignore_mismatched_sizes=model_args.ignore_mismatched_sizes,
             )
-        else:
-            raise e
+            model.config.pad_token_id = model.config.eos_token_id
+        except ValueError as e:
+            from transformers import T5Config
+        
+            if isinstance(config, T5Config):
+                from transformers_modified.t5 import T5ForSequenceClassification
+
+                model = T5ForSequenceClassification.from_pretrained(
+                    model_args.model_name_or_path,
+                    from_tf=bool(".ckpt" in model_args.model_name_or_path),
+                    config=config,
+                    cache_dir=model_args.cache_dir,
+                    revision=model_args.model_revision,
+                    use_auth_token=True if model_args.use_auth_token else None,
+                    ignore_mismatched_sizes=model_args.ignore_mismatched_sizes,
+                )
+            else:
+                raise e            
 
     # Freeze all parameters (including embeddings) except the classifier head
     if model_args.freeze_model:

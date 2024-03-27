@@ -45,14 +45,14 @@ SEED=${6:-12}
 
 # for treatment in {"extra","isabel","nothing","optimized","extra_1k","extra_og"}
 # treatment="base_cfg"
-treatment="personal_estimate"
+# treatment="personal_estimate"
+# # do
+# for seed in 1 2 4
 # do
-for seed in 1 2 4
-do
-    for subtask in {"cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte","wnli","stsb"}; do
-        sbatch finetune_model.slurm models/exp1_v3/$treatment/$seed glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
-    done
-done
+#     for subtask in {"cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte","wnli","stsb"}; do
+#         sbatch finetune_model.slurm models/exp1_v3/$treatment/$seed glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+#     done
+# done
 # done
 
 # treatment="isabel"
@@ -90,3 +90,13 @@ done
 #         sbatch finetune_model.slurm models/exp2_bert/$treatment/$seed glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED "bert-base-uncased"
 #     done
 # done
+
+# Mar 25
+for subdirectory in "./models/ltgbert"/*/; do
+    echo "Running evaluation for subdirectory: $subdirectory"
+
+    # Execute the command for each subdirectory
+    for subtask in {"cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte","wnli"}; do
+        sbatch finetune_ltgbert.slurm $subdirectory glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+    done
+done
