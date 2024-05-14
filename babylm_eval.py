@@ -89,7 +89,7 @@ TASKS = {
 
 def accuracy_on_task(task_name, eval_model, template_name, num_fewshot):
     predictions_path = os.path.join(
-        args.model_path, "zeroshot", task_title, "predictions.txt"
+        args.model_path, "zeroshot_filtered", task_title, "predictions.txt"
     )
     predictions_dir = os.path.dirname(predictions_path)
     if not os.path.exists(predictions_dir):
@@ -211,6 +211,8 @@ if __name__ == "__main__":
 
     if args.run_aoa:
         # Run AoA prediction evaluation
+        if args.model_type == "decoder" or args.model_type == "decoder only":
+            eval_model.tokenizer.pad_token = eval_model.tokenizer.eos_token
         word_surprisals_n, mad_results = lm_eval.aoa_pred_eval(
             eval_model.model,
             eval_model.tokenizer,

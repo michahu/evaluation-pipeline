@@ -16,7 +16,6 @@ MODEL_API_REGISTRY = {
     "hf-causal": huggingface.AutoCausalLM,
     "hf-seq2seq": huggingface.AutoSeq2SeqLM,
     "hf-mlm": huggingface.AutoMaskedLM,
-    "ltgbert": huggingface.LtgBertMaskedLM,
     "openai": openai_completions.OpenAICompletionsLM,
     "dummy": dummy.DummyLM,
 }

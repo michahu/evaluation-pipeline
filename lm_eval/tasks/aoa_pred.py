@@ -92,6 +92,8 @@ def get_batched_surprisal(model, tokenizer, model_type, dataloader, word_mapping
         sentences = item['sent']
         words = item['words']
         batch = tokenizer(sentences, return_tensors='pt', padding=True, truncation=True, max_length=50)
+        # delete batch['token_type_ids'] for compatibility
+        del batch['token_type_ids']
         for key in batch.keys():
             batch[key] = batch[key].to(device)
         if model_type == "hf-causal":
@@ -101,6 +103,7 @@ def get_batched_surprisal(model, tokenizer, model_type, dataloader, word_mapping
                 labels = batch['input_ids']
         else:
             labels = batch['input_ids']
+        # breakpoint()
         outputs = model(**batch, labels=labels)
         surprisals = -F.log_softmax(outputs.logits, -1)
         labels_split = torch.tensor_split(labels, batch_size)

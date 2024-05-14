@@ -4,7 +4,7 @@ LR=${1:-5e-5}
 PATIENCE=${2:-10}
 BSZ=${3:-64}
 EVAL_EVERY=${4:-200}
-MAX_EPOCHS=${5:-3}
+MAX_EPOCHS=${5:-5}
 SEED=${6:-12}
 
 # Fine-tune and evaluate on (Super)GLUE tasks
@@ -92,11 +92,35 @@ SEED=${6:-12}
 # done
 
 # Mar 25
-for subdirectory in "./models/ltgbert"/*/; do
-    echo "Running evaluation for subdirectory: $subdirectory"
+# for subdirectory in "./models/ltgbert_10M_v2"/*/; do
+#     # Execute the command for each subdirectory
+#     for subtask in {"cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte","wnli"}; do
+#         sbatch finetune_ltgbert.slurm $subdirectory glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+#     done
 
-    # Execute the command for each subdirectory
-    for subtask in {"cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte","wnli"}; do
-        sbatch finetune_ltgbert.slurm $subdirectory glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+#     for subtask in {"main_verb_control","control_raising_control","syntactic_category_control","lexical_content_the_control","relative_position_control","main_verb_lexical_content_the","main_verb_relative_token_position","syntactic_category_lexical_content_the","syntactic_category_relative_position","control_raising_lexical_content_the","control_raising_relative_token_position"}; do
+# 	    sbatch finetune_ltgbert.slurm $subdirectory msgs $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+#     done
+# done
+
+# Execute the command for each subdirectory
+
+# for epoch in 200 400 600 800; do
+for epoch in 1 3 7 11 15 19; do
+    for seed in 0 10 20; do
+        # subdirectory="./models/elcbert_base/-$epoch-$seed/"
+        for subdirectory in "./models/ltgbert_base/-$epoch-$seed/" "./models/ltgbert_base/-$epoch-$seed"; do
+            echo "Finetuning $subdirectory..."
+
+            for subtask in {"boolq","multirc","wsc","cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte"}; do
+                sbatch finetune_ltgbert.slurm $subdirectory glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+            done
+
+            for subtask in {"main_verb_control","control_raising_control","syntactic_category_control","lexical_content_the_control","relative_position_control","main_verb_lexical_content_the","main_verb_relative_token_position","syntactic_category_lexical_content_the","syntactic_category_relative_position","control_raising_lexical_content_the","control_raising_relative_token_position"}; do
+                sbatch finetune_ltgbert.slurm $subdirectory msgs $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+            done
+        done
     done
 done
+
+

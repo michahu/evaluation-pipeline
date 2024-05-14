@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --time=47:59:59
 #SBATCH --mem=16GB
-#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=ppt
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=myh2014@nyu.edu
@@ -55,5 +55,26 @@ for subdirectory in "$model_dir"/*/; do
     srun singularity exec --nv \
         --overlay /scratch/myh2014/singularity/50G.ext3:ro \
         /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
-        "source /ext3/env.sh; conda activate babylm; python babylm_eval.py $subdirectory $model_type"
+        "source /ext3/env.sh; conda activate babylm; python babylm_eval.py $subdirectory $model_type --trust_remote_code --run_aoa"
 done
+
+
+# Execute the command for each subdirectory
+
+# for seed in 0 10 20
+# do 
+# seed=20
+# for epoch in 200 400 600 800
+# do
+#     srun singularity exec --nv \
+#         --overlay /scratch/myh2014/singularity/50G.ext3:ro \
+#         /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
+#         "source /ext3/env.sh; conda activate babylm; python babylm_eval.py models/ltgbert_10M/ltgbert_10M-$epoch-$seed/ encoder --trust_remote_code --run_aoa"
+# done
+# done
+
+
+# srun singularity exec --nv \
+#     --overlay /scratch/myh2014/singularity/50G.ext3:ro \
+#     /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
+#     "source /ext3/env.sh; conda activate babylm; python babylm_eval.py models/gpt2-chengxu/ decoder --trust_remote_code --run_aoa"

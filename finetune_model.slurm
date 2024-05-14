@@ -6,7 +6,7 @@
 #SBATCH --output=glue-%j.out
 #SBATCH --time=47:59:59
 #SBATCH --mem=16GB
-#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=ppt
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=myh2014@nyu.edu
@@ -18,7 +18,7 @@ LR=${4:-5e-5}           # default: 5e-5
 PATIENCE=${5:-10}       # default: 10
 BSZ=${6:-64}            # default: 64
 EVAL_EVERY=${7:-200}    # default: 200
-MAX_EPOCHS=${8:-3}     # default: 10
+MAX_EPOCHS=${8:-5}     # default: 10
 SEED=${9:-12}           # default: 12
 TOKENIZER=$10 # default: gpt2
 

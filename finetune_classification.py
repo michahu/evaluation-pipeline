@@ -472,6 +472,7 @@ def main():
             cache_dir=model_args.cache_dir,
             revision=model_args.model_revision,
             use_auth_token=True if model_args.use_auth_token else None,
+            trust_remote_code=True
         )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name
@@ -481,6 +482,7 @@ def main():
         use_fast=model_args.use_fast_tokenizer,
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
+        trust_remote_code=True,
     )
     
     if model_args.tokenizer_name == "gpt2":
@@ -508,6 +510,7 @@ def main():
                 revision=model_args.model_revision,
                 use_auth_token=True if model_args.use_auth_token else None,
                 ignore_mismatched_sizes=model_args.ignore_mismatched_sizes,
+                trust_remote_code=True,
             )
             model.config.pad_token_id = model.config.eos_token_id
         except ValueError as e:
@@ -841,7 +844,7 @@ def main():
         tasks = [data_args.task_name]
         if data_args.task_name == "mnli":
             tasks.append("mnli-mm")
-            predict_datasets.append(raw_datasets["test_mismatched"])
+            predict_dataset.append(raw_datasets["test_mismatched"])
 
         # Removing the `label` columns because it contains -1 and Trainer won't like that.
         predict_dataset = predict_dataset.remove_columns("label")

@@ -18,7 +18,7 @@ LR=${4:-5e-5}           # default: 5e-5
 PATIENCE=${5:-10}       # default: 10
 BSZ=${6:-64}            # default: 64
 EVAL_EVERY=${7:-200}    # default: 200
-MAX_EPOCHS=${8:-3}     # default: 10
+MAX_EPOCHS=${8:-10}      # default: 10
 SEED=${9:-12}           # default: 12
 
 if [[ "$SUBTASK_NAME" = "mnli" ]]; then
@@ -43,9 +43,8 @@ srun singularity exec --nv \
 "source /ext3/env.sh; conda activate babylm; python finetune_classification.py \
   --model_name_or_path $MODEL_PATH \
   --output_dir $MODEL_PATH/finetune/$OUT_DIR/ \
-  --is_ltgbert True \
-  --train_file glue_files/$SUBTASK_NAME.train.json \
-  --validation_file glue_files/$SUBTASK_NAME.$VALID_NAME.json \
+  --train_file filter-data/${TASK_NAME}_filtered/$SUBTASK_NAME.train.json \
+  --validation_file filter-data/${TASK_NAME}_filtered/$SUBTASK_NAME.$VALID_NAME.json \
   --do_train \
   --do_eval \
   --do_predict \

@@ -191,8 +191,8 @@ class HuggingFaceAutoLM(TokenLM):
             # the user specified one so we force `self._device` to be the same as
             # `lm_head`'s.
             self._device = self.model.hf_device_map["lm_head"]
-        if not use_accelerate:
-            self.model.to(self._device)
+        # if not use_accelerate:
+        #     self.model.to(self._device)
 
     def _create_auto_model(
         self,
@@ -374,31 +374,31 @@ class HuggingFaceAutoLM(TokenLM):
                 results.append(response)
         return reorder.get_original(results)
     
-class LTGBertAutoLM(HuggingFaceAutoLM):
+# class LTGBertAutoLM(HuggingFaceAutoLM):
 
-    AUTO_MODEL_CLASS = LtgBertForMaskedLM
+#     AUTO_MODEL_CLASS = LtgBertForMaskedLM
 
-    def __init__(self,
-        pretrained: str,
-        tokenizer: Optional[str] = None,
-        subfolder: Optional[str] = None,
-        revision: Optional[str] = "main",
-        batch_size: Optional[int] = 1,
-        max_gen_toks: Optional[int] = 256,
-        max_length: Optional[int] = None,
-        add_special_tokens: Optional[bool] = None,
-        use_accelerate: Optional[bool] = False,
-        device_map_option: Optional[str] = "auto",
-        max_memory_per_gpu: Optional[Union[int, str]] = None,
-        max_cpu_memory: Optional[Union[int, str]] = None,
-        offload_folder: Optional[str] = "./offload",
-        dtype: Optional[Union[str, torch.dtype]] = None,
-        trust_remote_code: Optional[bool] = False,
-        device: Optional[Union[int, str]] = "cuda"):
-        super().__init__(pretrained, tokenizer, subfolder, revision, batch_size, max_gen_toks, max_length, add_special_tokens, use_accelerate, device_map_option, max_memory_per_gpu, max_cpu_memory, offload_folder, dtype, trust_remote_code, device)
-        self.model = LtgBertForMaskedLM.from_pretrained(pretrained)
-        self.model.to(self.device)
-        self.tokenizer.mask_token_id = 3
+#     def __init__(self,
+#         pretrained: str,
+#         tokenizer: Optional[str] = None,
+#         subfolder: Optional[str] = None,
+#         revision: Optional[str] = "main",
+#         batch_size: Optional[int] = 1,
+#         max_gen_toks: Optional[int] = 256,
+#         max_length: Optional[int] = None,
+#         add_special_tokens: Optional[bool] = None,
+#         use_accelerate: Optional[bool] = False,
+#         device_map_option: Optional[str] = "auto",
+#         max_memory_per_gpu: Optional[Union[int, str]] = None,
+#         max_cpu_memory: Optional[Union[int, str]] = None,
+#         offload_folder: Optional[str] = "./offload",
+#         dtype: Optional[Union[str, torch.dtype]] = None,
+#         trust_remote_code: Optional[bool] = False,
+#         device: Optional[Union[int, str]] = "cuda"):
+#         super().__init__(pretrained, tokenizer, subfolder, revision, batch_size, max_gen_toks, max_length, add_special_tokens, use_accelerate, device_map_option, max_memory_per_gpu, max_cpu_memory, offload_folder, dtype, trust_remote_code, device)
+#         self.model = LtgBertForMaskedLM.from_pretrained(pretrained)
+#         self.model.to(self.device)
+#         self.tokenizer.mask_token_id = 4
 
 
 
@@ -635,173 +635,6 @@ class AutoSeq2SeqLM(HuggingFaceAutoLM):
         )
         return generations
 
-class LtgBertMaskedLM(LTGBertAutoLM):
-    """Masked language modeling.
-    You can find a set of supported models in the following documentation:
-    https://huggingface.co/docs/transformers/main/model_doc/auto#transformers.AutoModelForMaskedLM
-    
-    Much of the code in this class is adapted from minicons, by Kanishka Misra:
-    https://github.com/kanishkamisra/minicons
-    which is itself adapted from the code of Salazar et al. (2020):
-    https://github.com/awslabs/mlm-scoring
-    """
-
-    AUTO_MODEL_CLASS = LtgBertForMaskedLM
-
-    @property
-    def max_length(self) -> int:
-        """Return the maximum sequence length of the model.
-        TODO: Currently only works for relative position encoded Seq2Seq models.
-        """
-        if self._max_length is not None:
-            return self._max_length
-        return self._DEFAULT_MAX_LENGTH
-
-    def _model_call(
-        self, inputs: TokenSequence, labels: Optional[TokenSequence] = None
-    ) -> TokenSequence:
-        return self.model(inputs, labels=labels["input_ids"])
-
-    def _model_generate(
-        self, 
-        inputs: transformers.BatchEncoding,
-        max_tokens: int,
-        stop: Optional[List[str]] = None,
-    ) -> TokenSequence:
-        raise NotImplementedError("Masked LMs are not well-suited to generating sequences.")
-
-    def encode(self, text: Union[str, List[str]], manual_special: bool = True, return_tensors: Optional[str] = 'pt') -> Dict:
-        """
-        Encode a batch of sentences using the model's tokenizer.
-        Equivalent of calling `model.tokenizer(input)`
-        :param ``Union[str, List[str]]`` text: Input batch/sentence to
-            be encoded.
-        :param manual_special: Specification of whether special tokens
-            will be manually encoded.
-        :type manual_special: bool
-        :param return_tensors: returned tensor format. Default `'pt'`
-        :type manual_special: str
-        :return: Encoded batch 
-        :rtype: ``Dict``
-        """
-        sentences = [text] if isinstance(text, str) else text
-
-        if manual_special:
-            # manually add special tokens
-            sentences = self.add_special_tokens(sentences)
-            if return_tensors:
-                tokens = self.tokenizer.batch_encode_plus(sentences, add_special_tokens = False, padding = 'longest', return_attention_mask = True, return_tensors = return_tensors)
-        else:
-            # mostly for masked LMs
-            tokens = self.tokenizer.batch_encode_plus(sentences, padding = 'longest', return_attention_mask = True)
-
-        return tokens
-    
-    def _prepare_text(self, text: Union[str, List[str]]):
-        sentences = [text] if isinstance(text, str) else list(text) if isinstance(text, tuple) else text
-        encoded = self.encode(sentences, manual_special = False)
-
-        token_idx = encoded['input_ids']
-        attention_masks = encoded['attention_mask']
-
-        masked_tensors = [] # token ids, attention masks, lengths
-
-        for token_ids, attention_mask in zip(token_idx, attention_masks):
-            token_ids = torch.tensor(token_ids)
-            # final_lengths = len(token_ids) - 2
-            attention_mask = torch.tensor(attention_mask)
-            
-            token_ids_masked_list = []
-            attention_masked_list = []
-
-            effective_token_ids = [token for token in token_ids if token != self.tokenizer.pad_token_id and token != self.tokenizer.cls_token_id and token != self.tokenizer.sep_token_id]
-            effective_length = len(effective_token_ids)
-
-            mask_indices = []
-            mask_indices = [[mask_pos] for mask_pos in range(effective_length+2)]
-
-            # We don't mask the [CLS], [SEP] for now for PLL
-            mask_indices = mask_indices[1:-1]
-            mask_token_id = self.tokenizer.mask_token_id
-            for mask_set in mask_indices:
-                token_ids_masked = token_ids.clone()
-                token_ids_masked[mask_set] = mask_token_id
-                attention_masked = attention_mask.clone()
-                
-                attention_masked_list.append(attention_masked)
-                token_ids_masked_list.append(token_ids_masked)
-            masked_tensors.append((torch.stack(token_ids_masked_list), torch.stack(attention_masked_list), effective_token_ids, len(mask_indices), 1))
-        
-        return masked_tensors
-
-    def loglikelihood(
-        self, requests: List[Tuple[str, str]]
-    ) -> List[Tuple[float, bool]]:
-        """
-        Returns *pseudo*-loglikelihoods, as described in Salazar et al. (2020).
-        """
-        scores = []
-        
-        for chunk in utils.chunks(tqdm(requests, disable=False), self.batch_size):
-            context, continuation = zip(*chunk)
-            context = [
-                f"{self.tokenizer.eos_token}" if len(text) == 0 else text for text in context
-            ]
-            # context_enc = self._prepare_text(context)
-            # for key in context_enc:
-            #     context_enc[key] = context_enc[key][:, -self.max_length :]
-
-            tokenized = self._prepare_text(continuation)
-
-            token_ids, attention_masks, effective_token_ids, lengths, offsets = list(zip(*tokenized))
-            token_ids = torch.cat(token_ids)
-            attention_masks = torch.cat(attention_masks)
-            token_ids = token_ids.to(self.device)
-            attention_masks = attention_masks.to(self.device)
-            effective_token_ids = torch.cat([torch.tensor(x) for x in effective_token_ids])
-            
-            indices = list(chain.from_iterable([list(range(o,o+n)) for n, o in zip(lengths, offsets)]))
-
-            with torch.no_grad():
-                output = self.model(token_ids, attention_mask = attention_masks)
-                logits = output.logits.detach()[torch.arange(sum(lengths)), indices]
-
-            logprob_distribution = logits - logits.logsumexp(1).unsqueeze(1)
-
-            # if base_two:
-            logprob_distribution = logprob_distribution/torch.tensor(2).log()
-
-            # if prob:
-            # logprob_distribution = logprob_distribution.exp()
-
-            # if rank:
-            #     shape = logprob_distribution.shape
-            #    '''
-            #    Double argsort trick:
-            #    first argsort returns idxes of values that would return a sorted tensor,
-            #    second argsort returns ranks (0 indexed)
-            #    Proof: https://www.berkayantmen.com/rank.html
-            #    TODO: Try to implement ranking in linear time but across arbitrary dimensions:
-            #    https://stackoverflow.com/a/5284703
-            #    '''
-            #     word_ranks = (-1.0 * logprob_distribution).argsort().argsort() + 1
-            #     word_ranks = word_ranks[torch.arange(shape[0]), effective_token_ids].split(lengths)
-            #     word_ranks = [wr.tolist() for wr in word_ranks]
-
-            batch_scores = logprob_distribution[torch.arange(sum(lengths)), effective_token_ids].type(torch.DoubleTensor).split(lengths)
-            # print(len(batch_scores[0]))
-            # print(len(tokenized[0]))
-            batch_scores = [(float(s.sum()),) for s in batch_scores]
-            scores.extend(batch_scores)
-
-            # if not return_tensors:
-            # scores = [s.tolist() for s in scores]
-
-            # if rank:
-            #     return scores, word_ranks
-            # else:
-        return scores
-
 class AutoMaskedLM(HuggingFaceAutoLM):
     """Masked language modeling.
     You can find a set of supported models in the following documentation:
@@ -884,21 +717,27 @@ class AutoMaskedLM(HuggingFaceAutoLM):
             effective_token_ids = [token for token in token_ids if token != self.tokenizer.pad_token_id and token != self.tokenizer.cls_token_id and token != self.tokenizer.sep_token_id]
             effective_length = len(effective_token_ids)
 
-            mask_indices = []
-            mask_indices = [[mask_pos] for mask_pos in range(effective_length+2)]
+            # mask_indices = [[mask_pos] for mask_pos in range(effective_length+1)]
+            # mask_indices = [[mask_pos] for mask_pos in range(effective_length+2)]
+            mask_indices = [[mask_pos] for mask_pos in range(effective_length)]
 
             # We don't mask the [CLS], [SEP] for now for PLL
-            mask_indices = mask_indices[1:-1]
-
+            # mask_indices = mask_indices[:-1]
+            # changed from  mask_indices[1:-1] because our tokenizer has no bos token
+            # mask_indices = mask_indices[1:-1]
             mask_token_id = self.tokenizer.mask_token_id
+            if mask_token_id is None:
+                mask_token_id = 3
             for mask_set in mask_indices:
                 token_ids_masked = token_ids.clone()
+                # breakpoint()
                 token_ids_masked[mask_set] = mask_token_id
                 attention_masked = attention_mask.clone()
                 
                 attention_masked_list.append(attention_masked)
                 token_ids_masked_list.append(token_ids_masked)
-            masked_tensors.append((torch.stack(token_ids_masked_list), torch.stack(attention_masked_list), effective_token_ids, len(mask_indices), 1))
+                # breakpoint()
+            masked_tensors.append((torch.stack(token_ids_masked_list), torch.stack(attention_masked_list), effective_token_ids, len(mask_indices), 0)) # might be zero
         
         return masked_tensors
 
@@ -930,9 +769,15 @@ class AutoMaskedLM(HuggingFaceAutoLM):
             
             indices = list(chain.from_iterable([list(range(o,o+n)) for n, o in zip(lengths, offsets)]))
 
+
+            # breakpoint()
+
             with torch.no_grad():
+                # attention_masks = torch.zeros(attention_masks.shape).to('cuda')
                 output = self.model(token_ids, attention_mask = attention_masks)
                 logits = output.logits.detach()[torch.arange(sum(lengths)), indices]
+
+            # breakpoint()
 
             logprob_distribution = logits - logits.logsumexp(1).unsqueeze(1)
 
@@ -955,7 +800,7 @@ class AutoMaskedLM(HuggingFaceAutoLM):
             #     word_ranks = (-1.0 * logprob_distribution).argsort().argsort() + 1
             #     word_ranks = word_ranks[torch.arange(shape[0]), effective_token_ids].split(lengths)
             #     word_ranks = [wr.tolist() for wr in word_ranks]
-
+            
             batch_scores = logprob_distribution[torch.arange(sum(lengths)), effective_token_ids].type(torch.DoubleTensor).split(lengths)
             # print(len(batch_scores[0]))
             # print(len(tokenized[0]))
@@ -968,6 +813,7 @@ class AutoMaskedLM(HuggingFaceAutoLM):
             # if rank:
             #     return scores, word_ranks
             # else:
+        # breakpoint()
         return scores
 
 

@@ -4,6 +4,7 @@ blimp
 glue_files
 models
 results
+wandb
 
 # Distribution / Packaging
 .Python
