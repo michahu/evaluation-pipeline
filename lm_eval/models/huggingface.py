@@ -191,8 +191,8 @@ class HuggingFaceAutoLM(TokenLM):
             # the user specified one so we force `self._device` to be the same as
             # `lm_head`'s.
             self._device = self.model.hf_device_map["lm_head"]
-        # if not use_accelerate:
-        #     self.model.to(self._device)
+        if not use_accelerate:
+            self.model.to(self._device)
 
     def _create_auto_model(
         self,

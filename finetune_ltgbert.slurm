@@ -6,7 +6,7 @@
 #SBATCH --output=glue-%j.out
 #SBATCH --time=47:59:59
 #SBATCH --mem=16GB
-#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --gres=gpu:1
 #SBATCH --job-name=ppt
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=myh2014@nyu.edu

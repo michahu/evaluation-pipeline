@@ -106,10 +106,9 @@ SEED=${6:-12}
 # Execute the command for each subdirectory
 
 # for epoch in 200 400 600 800; do
-for epoch in 1 3 7 11 15 19; do
-    for seed in 0 10 20; do
-        # subdirectory="./models/elcbert_base/-$epoch-$seed/"
-        for subdirectory in "./models/ltgbert_base/-$epoch-$seed/" "./models/ltgbert_base/-$epoch-$seed"; do
+for epoch in 19; do
+    for seed in 20; do
+        for subdirectory in "./models/elcbert_base/-$epoch-$seed/"; do
             echo "Finetuning $subdirectory..."
 
             for subtask in {"boolq","multirc","wsc","cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte"}; do

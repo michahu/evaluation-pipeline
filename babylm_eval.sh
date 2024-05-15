@@ -96,7 +96,7 @@
 # sbatch babylm_eval.slurm models/ltgbert_100M encoder
 
 # May 13 
-sbatch babylm_eval.slurm models/ltgbert_base encoder
+# sbatch babylm_eval.slurm models/ltgbert_base encoder
 
-# sbatch babylm_eval.slurm models/elcbert_base encoder
+sbatch babylm_eval.slurm models/elcbert_base encoder
 
