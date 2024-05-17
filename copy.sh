@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the directory containing subdirectories
-main_dir="./models/ltgbert_base"
+main_dir="./models/ltgbert_base_bug"
 
 # Define the files to be copied
 # files=("./models/ltgbert_10M/ltgbert_10M-200-10/config.json" "./models/ltgbert_10M/ltgbert_10M-200-10/special_tokens_map.json" "./models/ltgbert_10M/ltgbert_10M-200-10/tokenizer_config.json")

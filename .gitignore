@@ -5,6 +5,7 @@ glue_files
 models
 results
 wandb
+scratch.ipynb
 
 # Distribution / Packaging
 .Python

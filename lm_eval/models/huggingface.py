@@ -721,13 +721,15 @@ class AutoMaskedLM(HuggingFaceAutoLM):
             # mask_indices = [[mask_pos] for mask_pos in range(effective_length+2)]
             mask_indices = [[mask_pos] for mask_pos in range(effective_length)]
 
+            # breakpoint()
+
             # We don't mask the [CLS], [SEP] for now for PLL
             # mask_indices = mask_indices[:-1]
             # changed from  mask_indices[1:-1] because our tokenizer has no bos token
             # mask_indices = mask_indices[1:-1]
             mask_token_id = self.tokenizer.mask_token_id
-            if mask_token_id is None:
-                mask_token_id = 3
+            # if mask_token_id is None:
+            #     mask_token_id = 4
             for mask_set in mask_indices:
                 token_ids_masked = token_ids.clone()
                 # breakpoint()
@@ -806,6 +808,8 @@ class AutoMaskedLM(HuggingFaceAutoLM):
             # print(len(tokenized[0]))
             batch_scores = [(float(s.sum()),) for s in batch_scores]
             scores.extend(batch_scores)
+
+            # breakpoint()
 
             # if not return_tensors:
             # scores = [s.tolist() for s in scores]

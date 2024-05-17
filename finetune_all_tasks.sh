@@ -106,9 +106,10 @@ SEED=${6:-12}
 # Execute the command for each subdirectory
 
 # for epoch in 200 400 600 800; do
-for epoch in 19; do
-    for seed in 20; do
-        for subdirectory in "./models/elcbert_base/-$epoch-$seed/"; do
+for epoch in 50 100; do
+    for seed in 0 10 20; do
+        # for subdirectory in "./models/elcbert_base/-$epoch-$seed/"; do
+        for subdirectory in "./models/ltgbert_10M/-$epoch-$seed/"; do
             echo "Finetuning $subdirectory..."
 
             for subtask in {"boolq","multirc","wsc","cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte"}; do
@@ -121,5 +122,23 @@ for epoch in 19; do
         done
     done
 done
+
+for epoch in 200 400 600 800; do
+    for seed in 0 10 20; do
+        # for subdirectory in "./models/elcbert_base/-$epoch-$seed/"; do
+        for subdirectory in "./models/ltgbert_10M/ltgbert_10M-$epoch-$seed/"; do
+            echo "Finetuning $subdirectory..."
+
+            for subtask in {"boolq","multirc","wsc","cola","sst2","mrpc","qqp","mnli","mnli-mm","qnli","qqp","rte"}; do
+                sbatch finetune_ltgbert.slurm $subdirectory glue $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+            done
+
+            for subtask in {"main_verb_control","control_raising_control","syntactic_category_control","lexical_content_the_control","relative_position_control","main_verb_lexical_content_the","main_verb_relative_token_position","syntactic_category_lexical_content_the","syntactic_category_relative_position","control_raising_lexical_content_the","control_raising_relative_token_position"}; do
+                sbatch finetune_ltgbert.slurm $subdirectory msgs $subtask $LR $PATIENCE $BSZ $EVAL_EVERY $MAX_EPOCHS $SEED
+            done
+        done
+    done
+done
+
 
 

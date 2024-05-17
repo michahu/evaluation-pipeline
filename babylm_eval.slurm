@@ -48,30 +48,29 @@ cd /scratch/myh2014/evaluation-pipeline
 
 
 # Iterate over each subdirectory
-for subdirectory in "$model_dir"/*/; do
-    echo "Running evaluation for subdirectory: $subdirectory"
+# for subdirectory in "$model_dir"/*/; do
+#     echo "Running evaluation for subdirectory: $subdirectory"
 
-    # Execute the command for each subdirectory
-    srun singularity exec --nv \
-        --overlay /scratch/myh2014/singularity/50G.ext3:ro \
-        /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
-        "source /ext3/env.sh; conda activate babylm; python babylm_eval.py $subdirectory $model_type --trust_remote_code --run_aoa"
-done
+#     # Execute the command for each subdirectory
+#     srun singularity exec --nv \
+#         --overlay /scratch/myh2014/singularity/50G.ext3:ro \
+#         /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
+#         "source /ext3/env.sh; conda activate babylm; python babylm_eval.py $subdirectory $model_type --trust_remote_code --run_aoa"
+# done
 
 
 # Execute the command for each subdirectory
 
-# for seed in 0 10 20
-# do 
-# seed=20
-# for epoch in 200 400 600 800
-# do
-#     srun singularity exec --nv \
-#         --overlay /scratch/myh2014/singularity/50G.ext3:ro \
-#         /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
-#         "source /ext3/env.sh; conda activate babylm; python babylm_eval.py models/ltgbert_10M/ltgbert_10M-$epoch-$seed/ encoder --trust_remote_code --run_aoa"
-# done
-# done
+for seed in 0 10 20
+do 
+    for epoch in 1
+    do
+        srun singularity exec --nv \
+            --overlay /scratch/myh2014/singularity/50G.ext3:ro \
+            /scratch/work/public/singularity/cuda11.8.86-cudnn8.7-devel-ubuntu22.04.2.sif  /bin/bash -c \
+            "source /ext3/env.sh; conda activate babylm; python babylm_eval.py models/ltgbert_base/-$epoch-$seed/ encoder --trust_remote_code"
+    done
+done
 
 
 # srun singularity exec --nv \
